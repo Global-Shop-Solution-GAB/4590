@@ -1,0 +1,370 @@
+Program.Sub.ScreenSU.Start
+Gui.Form..Create
+Gui.Form..Size(4575,2940)
+Gui.Form..MinX(0)
+Gui.Form..MinY(0)
+Gui.Form..Position(0,0)
+Gui.Form..BackColor(-2147483633)
+Gui.Form..MousePointer(0)
+Gui.Form..Event(UnLoad,Unload)
+Gui.Form..Caption("Select Parameters")
+Gui.Form..Sizeable(False)
+Gui.Form.lblBegDate.Create(Label,"Beginning Date",True,1290,195,0,270,300,True,0,"Arial",8,-2147483633,0)
+Gui.Form.lblendDate.Create(Label,"Ending Date",True,1245,195,0,2010,300,True,0,"Arial",8,-2147483633,0)
+Gui.Form.dtpBegDate.Create(DatePicker)
+Gui.Form.dtpBegDate.Size(1425,285)
+Gui.Form.dtpBegDate.Position(315,570)
+Gui.Form.dtpBegDate.TabStop(True)
+Gui.Form.dtpBegDate.TabIndex(1)
+Gui.Form.dtpEndDate.Create(DatePicker)
+Gui.Form.dtpEndDate.Size(1425,285)
+Gui.Form.dtpEndDate.Position(2040,570)
+Gui.Form.dtpEndDate.TabStop(True)
+Gui.Form.dtpEndDate.TabIndex(2)
+Gui.Form.cmdExport.Create(Button)
+Gui.Form.cmdExport.Size(1080,435)
+Gui.Form.cmdExport.Position(390,1800)
+Gui.Form.cmdExport.Caption("Export")
+Gui.Form.cmdExport.Event(Click,cmdExport_Click)
+Gui.Form.cmdExport.TabStop(True)
+Gui.Form.cmdExport.TabIndex(6)
+Gui.Form.txtJob.Create(TextBox,"",True,1215,300,0,360,1260,True,0,"Arial",8,-2147483643,1)
+Gui.Form.txtJob.TabStop(True)
+Gui.Form.txtJob.TabIndex(4)
+Gui.Form.lblJob.Create(Label,"Job",True,585,255,0,300,1035,True,0,"Arial",8,-2147483633,0)
+Gui.Form.cmdJobBrwse.Create(Button)
+Gui.Form.cmdJobBrwse.Size(405,345)
+Gui.Form.cmdJobBrwse.Position(1710,1245)
+Gui.Form.cmdJobBrwse.Caption("^")
+Gui.Form.cmdJobBrwse.Event(Click,cmdJobBrwse_Click)
+Gui.Form.cmdJobBrwse.TabStop(True)
+Gui.Form.cmdJobBrwse.TabIndex(5)
+Gui.Form.lblNumbofWeeks.Create(Label,"Number of Weeks",False,1455,255,0,3570,285,True,0,"Arial",8,-2147483633,0)
+Gui.Form.txtNumbofWeeks.Create(TextBox,"",False,525,300,0,4050,555,True,0,"Arial",8,-2147483643,1)
+Gui.Form.txtNumbofWeeks.NumericOnly(1)
+Gui.Form.txtNumbofWeeks.TabStop(True)
+Gui.Form.txtNumbofWeeks.TabIndex(3)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+V.Local.sError.Declare(String)
+
+'Coded by: WAW
+'Date: 7/26/17
+'This will be the Labor Hours Export based on BOM Work Order and Date Range. This will run from a custom menu item
+
+'open connection'opening connection
+F.ODBC.Connection!conx.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass,400000)
+
+'display the form to allow the user to select parameters
+gui.Form..Visible(true)
+
+F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4590_LaborHrs.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+Program.Sub.Unload.Start
+F.Intrinsic.Control.SetErrorHandler("Unload_Err")
+F.Intrinsic.Control.ClearErrors
+V.Local.sError.Declare(String)
+
+'closing connection and ending program
+F.ODBC.Connection!conx.Close
+Function.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.Label("Unload_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4590_LaborHrs.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+Program.Sub.Unload.End
+
+Program.Sub.cmdJobBrwse_Click.Start
+F.Intrinsic.Control.SetErrorHandler("cmdJobBrwse_Err")
+F.Intrinsic.Control.ClearErrors
+V.Local.sError.Declare(String)
+v.Local.sret.Declare(String)
+v.Local.stitles.Declare(string)
+v.Local.iwidths.Declare(long)
+
+f.Intrinsic.UI.setbrowserhottypeahead(True)
+
+'browse for the job
+Function.Intrinsic.String.Split("Job*!*Suffix*!*Part*!*Description*!*Customer*!*Due Date","*!*",variable.local.sTitles)
+Function.Intrinsic.String.Split("1000*!*800*!*2000*!*3000*!*800*!*1000","*!*",variable.local.iWidths)
+Function.Intrinsic.UI.Browser("Select a Job","conx","Select Job, Suffix, Part, Description, Customer, Date_Due From V_JOB_HEADER ORDER BY JOB, SUFFIX",Variable.Local.sTitles,Variable.Local.iWidths,Variable.Local.sRet)
+Function.Intrinsic.Control.If(Variable.Local.sRet,"=","***CANCEL***")
+ 	Function.Intrinsic.UI.Msgbox("No job was selected!")
+Function.Intrinsic.Control.Else
+ 	Function.Intrinsic.String.Split(Variable.Local.sRet,"*!*",Variable.Local.sRet)
+	'set the job in the textbox
+	gui.Form.txtJob.Text(v.Local.sret(0))
+Function.Intrinsic.Control.EndIf
+
+
+F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.Label("cmdJobBrwse_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4590_LaborHrs.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+Program.Sub.cmdJobBrwse_Click.End
+
+Program.Sub.cmdExport_Click.Start
+F.Intrinsic.Control.SetErrorHandler("cmdExport_Err")
+F.Intrinsic.Control.ClearErrors
+V.Local.sError.Declare(String)
+v.Local..BulkDeclareDate(dBegDate, dcurrentweek, DEndDate, dtempenddate, dtempbegdate)
+v.Local..BulkDeclareString(sSql,Sfilename, sElements, sUploadData, sUploadtypes, sWeekStart, sEmp, sFilter, sExp, sline, sfinal, sret, savgline, slessthan, sExpression, srate, sJOB4, sjobtext, sendingtext, sstar, snostar, sordinal, sweeklytotals)
+v.Local..BulkDeclareFloat(fTotal,fEmpRate,fReghrs,fOThrs,fDblHrs, fRate, fCalc, fRegTotal, fOtTotal, fDblTotal, fAvg, fRegGrand, fOTGrand, fDblGrand, fTotalGrand, fweeklytotal, ftotaltotal, fnumberofemps, fnewweek)
+v.Local..BulkDeclareLong(iworkdays, inumberofweeks, i, iEmp, idays, iavg)
+v.Local.bstar.Declare(boolean)
+v.Local.btotals.Declare(boolean,false)
+v.Local.bdelete.Declare(boolean)
+
+v.Local.bstar.Set(False)
+'check to see if a job was selected
+f.Intrinsic.Control.If(v.Screen.Form!txtJob.text,=,"")
+	F.Intrinsic.UI.Msgbox("Select a Job!")
+	f.Intrinsic.Control.Exitsub
+f.Intrinsic.Control.EndIf
+
+f.Intrinsic.String.Left(v.Screen.Form!txtJob.text,4,v.Local.sjob4)
+
+'set the beginning date
+v.Local.dbegdate.Set(v.Screen.Form!dtpBegDate.Value)
+
+f.Intrinsic.Control.If(v.Screen.Form!txtNumbofWeeks.text,=,"")
+	'set the ending date
+	v.local.denddate.Set(v.Screen.Form!dtpEndDate.Value)
+f.Intrinsic.Control.Else
+	'multiply by 7 to get the number of days to add to the beginning date
+	f.Intrinsic.Math.Mult(v.Screen.Form!txtNumbofWeeks.text,7,v.Local.idays)
+	f.Intrinsic.Date.DateAdd("D",v.Local.idays,v.Local.dbegdate,v.Local.denddate)
+f.Intrinsic.Control.EndIf
+
+'Have the user select the location the file should be stored in
+Function.Intrinsic.ui.showsavefiledialog("","excel|*.xls",variable.local.Sfilename)
+
+'if no file path selected prompt the user
+f.Intrinsic.Control.If(v.Local.sfilename,=,"***CANCEL***")
+	F.Intrinsic.UI.Msgbox("No file path selected!")
+	gui.Form..Visible(true)
+	f.Intrinsic.Control.ExitSub
+f.Intrinsic.Control.EndIf
+
+'close form
+gui.Form..Visible(false)
+
+'invoke wait dialog
+f.Intrinsic.UI.InvokeWaitDialog("Generating Excel File...")
+
+'build the header titles
+f.Intrinsic.String.Build("{0}*!*{1}*!*{2}*!*{3}*!*{4}*!*{5}","Emp_Name","Emp_Rate","Reg_Hrs","OT_Hrs","Dbl_Hrs","Total_Wages",v.Local.sElements)
+
+'create the upload datatable
+v.Local.suploadtypes.set("string*!*string*!*string*!*string*!*string*!*string")
+v.Local.suploaddata.Set("*!**!*0*!*0*!*0*!*")
+F.Data.DataTable.CreateFromString("dtExcel",v.Local.suploaddata,V.Local.selements,V.Local.suploadtypes,"*!*","@!@",True)
+f.Data.DataTable.DeleteRow("dtExcel")
+
+''query for the job information
+f.Intrinsic.String.Build("Select EMPL as EMPLOYEE, CHARGE_DATE, HOURS_WORKED, RATE_TYPE FROM V_JOB_DETAIL where CHARGE_DATE between '{0}' and '{1}' and EMPL >= '00001' and EMPL < '99999' and EDITED_WO_DTL <> '{2}' and JOB LIKE '%{3}%'",v.Local.dbegdate.PervasiveDate,v.Local.denddate.pervasivedate,"R",v.local.sjob4.fieldvaltrim,v.Local.ssql)
+f.Data.DataTable.CreateFromSQL("dtLaborHrs","conx",v.Local.ssql,true)
+f.Data.DataTable.AddColumn("dtLaborHrs","RATE_EMPLOYEE","float")
+f.Data.DataTable.AddColumn("dtLaborHrs","NAME","STRING")
+
+f.Data.Dictionary.CreateFromSQL("dict","conx","Select  EMPLOYEE, NAME from V_EMPLOYEE_MSTR")
+Function.Data.Dictionary.SetDefaultReturn("DICT","")
+f.Data.DataTable.FillFromDictionary("dtLaborHrs","DICT","EMPLOYEE","NAME")
+f.Data.Dictionary.Close("DICT")
+
+f.Data.Dictionary.CreateFromSQL("dict","conx","Select EMPLOYEE, (RATE + DIFFERENTIAL) as RATE_EMPLOYEE from V_EMPLOYEE_MSTR")
+Function.Data.Dictionary.SetDefaultReturn("DICT","")
+f.Data.DataTable.FillFromDictionary("dtLaborHrs","DICT","EMPLOYEE","RATE_EMPLOYEE")
+f.Data.Dictionary.Close("DICT")
+
+'get the reg time grand total
+f.Intrinsic.String.Build("[{0}] = '{1}'","RATE_TYPE","R",v.Local.sfilter)
+f.Data.DataTable.Compute("dtLaborHrs","SUM(HOURS_WORKED)",v.Local.sfilter,v.Local.fregGrand)
+		f.Intrinsic.String.Format(v.Local.freggrand,"#0.0",v.Local.freggrand)	
+
+'get the overtime grand total
+f.Intrinsic.String.Build("[{0}] = '{1}'","RATE_TYPE","O",v.Local.sfilter)
+f.Data.DataTable.Compute("dtLaborHrs","SUM(HOURS_WORKED)",v.Local.sfilter,v.Local.fOTGrand)
+f.Intrinsic.String.Format(v.Local.fotGrand,"#0.0",v.Local.fotGrand)	
+
+'get the doubletime grand total;
+f.Intrinsic.String.Build("[{0}] = '{1}'","RATE_TYPE","D",v.Local.sfilter)
+f.Data.DataTable.Compute("dtLaborHrs","SUM(HOURS_WORKED)",v.Local.sfilter,v.Local.fdblGrand)
+	f.Intrinsic.String.Format(v.Local.fdblGrand,"#0.0",v.Local.fdblGrand)	
+
+f.Data.DataView.Create("dtLaborHrs","dvLaborHrs",22,"","NAME ASC")
+Function.Data.DataView.ToDataTableDistinct("dtLaborHrs","dvLaborHrs","DistinctDT","EMPLOYEE*!*RATE_EMPLOYEE*!*NAME",true)
+
+v.Local.dtempbegdate.Set(v.Local.dbegdate)
+
+'add 5 days to get temp end date
+f.Intrinsic.Date.DateAdd("D",7,v.Local.dtempbegdate,v.Local.dtempenddate)
+
+f.Intrinsic.String.Build("(CHARGE_DATE >= #{0}# and CHARGE_DATE <= #{1}#)",v.Local.dtempbegdate.PervasiveDate,v.Local.dtempenddate.PervasiveDate,v.Local.slessthan)
+
+'filter by starting and ending date
+f.Data.DataView.Create("dtLaborHrs","dvLabordaterange",22,v.Local.slessthan,"NAME ASC")
+
+'add the column headers
+f.Data.DataTable.AddRow("dtExcel","Emp_Name","Employee Name","Emp_Rate","Employee Master Rate","Reg_Hrs","# of Regular Hours","OT_Hrs","# of OT Hours","dbl_Hrs","# of Double Time Hours","Total_Wages","Total Wages $")
+f.Intrinsic.String.Build("{0} {1}","Period Ending:",v.Screen.Form!dtpEndDate.Value,v.Local.sendingtext)
+f.Intrinsic.String.Build("{0} {1}","Job #:",v.Screen.Form!txtJob.text,v.Local.sjobtext)
+f.Data.DataTable.AddRow("dtExcel","Emp_Name",v.Local.sendingtext,"Total_Wages",v.Local.sjobtext)
+
+'loop through the datatable
+f.Intrinsic.control.For(v.Local.i,0,v.datatable.distinctDT.RowCount--,1)
+	'check to see if data in the view
+	f.Intrinsic.Control.If(v.DataView.dtLaborHrs!dvLabordateRange.rowcount,>,0)
+		'get the reg time  total for that week
+		f.Intrinsic.String.Build("RATE_TYPE = '{0}' and CHARGE_DATE >= #{1}# and CHARGE_DATE <= #{2}# and EMPLOYEE = '{3}'","R",v.Local.dtempbegdate.PervasiveDate,v.Local.dtempenddate.PervasiveDate,v.DataTable.DistinctDT(v.Local.i).EMPLOYEE!fieldvalTRIM,v.Local.sfilter)
+		f.Data.DataTable.Compute("dtLaborHrs","SUM(HOURS_WORKED)",v.Local.sfilter,v.Local.freghrs)
+		f.Intrinsic.String.Format(v.Local.freghrs,"#0.0",v.Local.freghrs)	
+		
+		'get the overtime hours for that week
+		f.Intrinsic.String.Build("RATE_TYPE = '{0}' and CHARGE_DATE >= #{1}# and CHARGE_DATE <= #{2}# and EMPLOYEE = '{3}'","O",v.Local.dtempbegdate.PervasiveDate,v.Local.dtempenddate.PervasiveDate,v.DataTable.DistinctDT(v.Local.i).EMPLOYEE!fieldvalTRIM,v.Local.sfilter)
+		f.Data.DataTable.Compute("dtLaborHrs","SUM(HOURS_WORKED)",v.Local.sfilter,v.Local.fothrs)
+		f.Intrinsic.String.Format(v.Local.fothrs,"#0.0",v.Local.fothrs)		
+		
+		'get the dbl time hours for that week
+		f.Intrinsic.String.Build("RATE_TYPE = '{0}' and CHARGE_DATE >= #{1}# and CHARGE_DATE <= #{2}# and EMPLOYEE = '{3}'","D",v.Local.dtempbegdate.PervasiveDate,v.Local.dtempenddate.PervasiveDate,v.DataTable.DistinctDT(v.Local.i).EMPLOYEE!fieldvalTRIM,v.Local.sfilter)
+		f.Data.DataTable.Compute("dtLaborHrs","SUM(HOURS_WORKED)",v.Local.sfilter,v.Local.fdblhrs)
+		f.Intrinsic.String.Format(v.Local.fdblhrs,"#0.0",v.Local.fdblhrs)			
+		
+		v.Local.frate.Set(v.DataTable.distinctDT(v.Local.i).RATE_EMPLOYEE!fieldvaltrim)
+		'((Employee Master Rate * # of Regular Hours) 
+		
+		f.Intrinsic.Math.Mult(v.Local.frate,v.Local.freghrs,v.Local.ftotal)
+		f.Intrinsic.String.Format(v.Local.ftotal,"#0.00",v.Local.ftotal)		
+		f.Intrinsic.String.Format(v.Local.frate,"#0.00",v.Local.frate)		
+		''''15*17.01
+		'+ ((Employee Master rate * 1.5)* # of OT Hours)
+		f.Intrinsic.Math.Mult(v.Local.frate,1.5,v.Local.fcalc)
+		
+		f.Intrinsic.Math.Mult(v.Local.fcalc,v.Local.fothrs,v.Local.fcalc)
+		
+		f.Intrinsic.String.Format(v.Local.fcalc,"#0.00",v.Local.fcalc)
+		'add the total and the calc
+		f.Intrinsic.Math.Add(v.Local.ftotal,v.Local.fcalc,v.Local.ftotal)
+		'((Employee Master Rate * 2.0) * # of Double Time Hours))
+		f.Intrinsic.Math.Mult(v.Local.frate,2,v.Local.fcalc)
+		f.Intrinsic.Math.Mult(v.Local.fcalc,v.Local.fdblhrs,v.Local.fcalc)
+		f.Intrinsic.String.Format(v.Local.fcalc,"#0.00",v.Local.fcalc)		
+		'add the total and the calc
+		f.Intrinsic.Math.Add(v.Local.ftotal,v.Local.fcalc,v.Local.ftotal)
+		f.Intrinsic.String.Format(v.Local.ftotal,"#0.00",v.Local.ftotal)			
+		f.Intrinsic.Math.Add(v.Local.ftotal,v.Local.ftotaltotal,v.Local.ftotaltotal)	
+		f.Intrinsic.String.Format(v.Local.frate,"#0.00",v.Local.frate)
+		f.Intrinsic.String.Format(v.Local.ftotal,"#0.00",v.Local.ftotal)	
+		f.Intrinsic.String.Format(v.Local.freghrs,"#0.0",v.Local.freghrs)	
+		f.Intrinsic.String.Format(v.Local.fothrs,"#0.0",v.Local.fothrs)	
+		f.Intrinsic.String.Format(v.Local.fdblhrs,"#0.0",v.Local.fdblhrs)			
+
+		'add the row
+		f.Data.DataTable.AddRow("dtExcel","Emp_Name",v.DataTable.distinctDT(v.Local.i).NAME!fieldvalstringpsqlfriendly,"Emp_Rate",v.Local.frate,"Reg_Hrs",v.Local.freghrs,"OT_Hrs",v.Local.fothrs,"Dbl_Hrs",v.Local.fdblhrs,"Total_Wages",v.Local.ftotal)
+		'add the grand total wages
+		f.Intrinsic.Math.Add(v.Local.ftotalgrand,v.Local.ftotal,v.Local.ftotalgrand)
+	f.Intrinsic.Control.EndIf
+f.Intrinsic.Control.Next(v.Local.i)
+
+'get the row count for distinct employees
+Function.Data.DataView.ToDataTableDistinct("dtLaborHrs","dvLaborDateRange","DistinctEMPRange","EMPLOYEE*!*RATE_EMPLOYEE")
+f.Data.DataTable.Compute("distinctEmpRange","AVG(RATE_EMPLOYEE)","",v.Local.fAVG)
+
+f.Intrinsic.String.Format(v.Local.favg,"#0.00",v.Local.favg)	
+
+'calculate teh averages
+f.Intrinsic.String.Build("{0}{1}","Averages rates for the week starting: ",v.Local.dtempbegdate,v.Local.savgline)
+'add the row
+f.Data.DataTable.AddRow("dtExcel","Emp_Name",v.Local.savgline,"Emp_Rate",v.Local.favg)
+
+'get the total reg hours
+f.Intrinsic.String.Build("CHARGE_DATE >= #{0}# and CHARGE_DATE <= #{1}# and EMPLOYEE <> '{2}' and EMPLOYEE <> '{3}' and RATE_TYPE = '{4}'",v.Local.dtempbegdate.PervasiveDate,v.Local.dtempenddate.PervasiveDate,"Averages for the week starting: ","Totals for the week starting: ","R",v.Local.sfilter)
+f.Data.DataTable.Compute("dtLaborHrs","SUM(HOURS_WORKED)",v.Local.sfilter,v.Local.fregTotal)
+
+'get the total overtime hours
+f.Intrinsic.String.Build("CHARGE_DATE >= #{0}# and CHARGE_DATE <= #{1}# and EMPLOYEE <> '{2}' and EMPLOYEE <> '{3}' and RATE_TYPE = '{4}'",v.Local.dtempbegdate.PervasiveDate,v.Local.dtempenddate.PervasiveDate,"Averages for the week starting: ","Totals for the week starting: ","O",v.Local.sfilter)
+f.Data.DataTable.Compute("dtLaborHrs","SUM(HOURS_WORKED)",v.Local.sfilter,v.Local.fotTotal)
+
+'get the total dbl hours for that week
+f.Intrinsic.String.Build("CHARGE_DATE >= #{0}# and CHARGE_DATE <= #{1}# and EMPLOYEE <> '{2}' and EMPLOYEE <> '{3}' and RATE_TYPE = '{4}'",v.Local.dtempbegdate.PervasiveDate,v.Local.dtempenddate.PervasiveDate,"Averages for the week starting: ","Totals for the week starting: ","D",v.Local.sfilter)
+f.Data.DataTable.Compute("dtLaborHrs","SUM(HOURS_WORKED)",v.Local.sfilter,v.Local.fdblTotal)
+		
+f.Intrinsic.String.Build("{0}{1}","Totals for the week starting: ",v.Local.dtempbegdate,v.Local.sline)
+
+'close the date range dataview
+f.Intrinsic.Control.If(v.DataView.dvLabordaterange.exists,=,true)
+	v.DataView.dvlabordaterange.close
+f.Intrinsic.Control.EndIf
+
+'check to see if the datatable already exists, if so close it
+F.Intrinsic.Control.If(V.DataTable.DistinctEMPRANGE.Exists)
+	F.Data.Datatable.Close("DistinctEMPRANGE")
+F.Intrinsic.Control.EndIf
+
+'add the grand total row
+f.Data.DataTable.AddRow("dtExcel","Emp_Name","Grand Totals: ","Reg_Hrs",v.Local.freggrand,"OT_Hrs",v.Local.fotgrand,"Dbl_Hrs",v.Local.fdblgrand,"Total_Wages",v.Local.ftotalgrand)
+
+'create a view for the excel output
+f.Data.DataView.Create("dtExcel","dvExcel")
+
+f.Data.DataView.ToString("dtExcel","dvExcel",v.Local.selements,"*!*","$!$",v.Local.sfinal)
+
+f.Automation.MSExcel.WriteSpreadsheet(v.Local.sfilename,v.Local.sfinal)
+
+f.Intrinsic.UI.CloseWaitDialog
+
+F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.Label("cmdExport_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4590_LaborHrs.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.cmdExport_Click.End
+
+
+
+Program.Sub.Again.Start
+F.Intrinsic.Control.SetErrorHandler("Again_Err")
+F.Intrinsic.Control.ClearErrors
+V.Local.sError.Declare(String)
+v.Local..BulkDeclareDate(dBegDate, dcurrentweek, DEndDate, dtempenddate, dtempbegdate)
+v.Local..BulkDeclareString(sSql,Sfilename, sElements, sUploadData, sUploadtypes, sWeekStart, sEmp, sFilter, sExp, sline, sfinal, sret, savgline, slessthan, sExpression, srate, sJOB4, sjobtext, sendingtext, sstar, snostar, sordinal, sweeklytotals)
+v.Local..BulkDeclareFloat(fTotal,fEmpRate,fReghrs,fOThrs,fDblHrs, fRate, fCalc, fRegTotal, fOtTotal, fDblTotal, fAvg, fRegGrand, fOTGrand, fDblGrand, fTotalGrand, fweeklytotal, ftotaltotal, fnumberofemps, fnewweek)
+v.Local..BulkDeclareLong(iworkdays, inumberofweeks, i, iEmp, idays, iavg)
+v.Local.bstar.Declare(boolean)
+v.Local.btotals.Declare(boolean,false)
+v.Local.bdelete.Declare(boolean)
+
+F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.Label("Again_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4590_LaborHrs.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	f.Intrinsic.Control.End
+Function.Intrinsic.Control.EndIf
+Program.Sub.Again.End
